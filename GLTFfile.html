@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>GLTF file</title>
+</head>
+<body>
+    <div class="home">
+        <a href="/index.html"> Home </a>
+    </div>
+    
+    
+</body>
+
+<canvas id="c2"></canvas>
+
+<script type="module">
+    import * as THREE from './resources/build/three.module.js';
+    import {GLTFLoader} from './resources/build/GLTFLoader.js';
+
+    function main() {
+        const canvas = document.querySelector('#c2'); // pass in canvas into renderer 
+        const renderer = new THREE.WebGLRenderer({canvas}); //renderer 
+
+        //camera 
+        const fov = 75;
+        const aspect = 2;  // the canvas default
+        const near = 0.1;
+        const far = 50;
+        const camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+        camera.position.set(0,1.5,6);
+
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color('grey');
+
+        //lighting 
+        
+        {
+            const skyColor = 0xB1E1FF;  // light blue
+            const groundColor = 0xB97A20;  // brownish orange
+            const intensity = 1;
+            const light = new THREE.HemisphereLight(skyColor, groundColor, intensity);
+            scene.add(light);
+        }
+
+        {
+            const color = 0xFFFFFF;
+            const intensity = 1;
+            const light = new THREE.DirectionalLight(color, intensity);
+            light.position.set(5, 10, 2);
+            scene.add(light);
+            scene.add(light.target);
+        }
+        /*
+        function frameArea(sizeToFitOnScreen, boxSize, boxCenter, camera) {
+            const halfSizeToFitOnScreen = sizeToFitOnScreen * 0.5;
+            const halfFovY = THREE.MathUtils.degToRad(camera.fov * .5);
+            const distance = halfSizeToFitOnScreen / Math.tan(halfFovY);
+            // compute a unit vector that points in the direction the camera is now
+            // in the xz plane from the center of the box
+            const direction = (new THREE.Vector3())
+                .subVectors(camera.position, boxCenter)
+                .multiply(new THREE.Vector3(1, 0, 1))
+                .normalize();
+
+            // move the camera to a position distance units way from the center
+            // in whatever direction the camera was from the center already
+            camera.position.copy(direction.multiplyScalar(distance).add(boxCenter));
+
+            // pick some near and far values for the frustum that
+            // will contain the box.
+            camera.near = boxSize / 100;
+            camera.far = boxSize * 100;
+
+            camera.updateProjectionMatrix();
+
+            // point the camera to look at the center of the box
+            camera.lookAt(boxCenter.x, boxCenter.y, boxCenter.z);
+        }
+        */
+
+        let head;
+        {
+            const gltfLoader = new GLTFLoader();
+            const url = './resources/mesh/GLTF/goatSkull.gltf';
+            gltfLoader.load(url, (gltf) => {
+                const root = gltf.scene;
+                scene.add(root);
+                head = root.getObjectByName('head_');
+            });
+        }
+
+        function resizeRendererToDisplaySize(renderer) {
+            const canvas = renderer.domElement;
+            const width = canvas.clientWidth;
+            const height = canvas.clientHeight;
+            const needResize = canvas.width !== width || canvas.height !== height;
+            if (needResize) {
+                renderer.setSize(width, height, false);
+            }
+            return needResize;
+        }
+    
+        function render(time) {
+
+            time *= 0.00075;
+            if (resizeRendererToDisplaySize(renderer)) {
+                const canvas = renderer.domElement;
+                camera.aspect = canvas.clientWidth / canvas.clientHeight;
+                camera.updateProjectionMatrix();
+            }
+            
+            if(head){
+                head.rotation.y = time;
+            }    
+            
+            renderer.render(scene, camera);
+            requestAnimationFrame(render);
+        }
+
+        requestAnimationFrame(render);
+    }
+    main();
+</script>
+
+</html>
